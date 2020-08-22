@@ -1,69 +1,41 @@
 <template>
   <div id="app">
     <img alt="Vue logo" src="./assets/logo.png" />
-    <form @submit.prevent>
-      <input type="number" name="id" v-model="id" placeholder="id" />
-      <input type="text" name="nama" v-model="nama" placeholder="nama" />
-      <input type="text" name="alamat" v-model="alamat" placeholder="alamat" />
-      <br />
-      <button type="submit" @click="add">add</button>
-      <button type="submit" @click="update">update</button>
-    </form>
-    <ol>
-      <li class v-for="data in datas" :key="data.id">
-        <p>{{data.nama}} - {{data.alamat}}</p>
-      </li>
-    </ol>
+    <br />
+    <input type="file" name id @change="onFileSelected" />
+    <button @click="upload">Upload</button>
+    <br />
+    <div v-if="img">
+      <p>Link file : {{img}}</p>
+      <p>Uploaded Image :</p>
+      <img :src="img" alt="uploaded image" />
+    </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import qs from "qs";
 
 export default {
   name: "App",
   data: () => ({
-    datas: {},
-    headers: {
-      headers: {
-        "content-type": "application/x-www-form-urlencoded;charset=utf-8"
-      }
-    },
-    id: "",
-    nama: "",
-    alamat: ""
+    img: null,
+    selectedFile: null
   }),
-  mounted() {
-    axios
-      .get("https://website-coba-api.000webhostapp.com/api/siswa")
-      .then(res => (this.datas = res.data))
-      .catch(err => console.log(err));
-  },
   methods: {
-    add() {
+    onFileSelected() {
+      this.selectedFile = event.target.files[0];
+    },
+    upload() {
+      const fD = new FormData();
+      fD.append("image", this.selectedFile, this.selectedFile.name);
       axios
         .post(
-          `https://website-coba-api.000webhostapp.com/api/siswa`,
-          qs.stringify({
-            nama: this.nama,
-            alamat: this.alamat
-          }),
-          this.headers
+          "https://api.imgbb.com/1/upload?key=3a9c096a26e849b4b39ddb680655c233",
+          fD
         )
-        .then(res => {
-          this.datas.push(res.data);
-        });
-    },
-    update() {
-      axios.put(
-        `https://website-coba-api.000webhostapp.com/api/siswa/${this.id}`,
-        qs.stringify({
-          nama: this.nama,
-          alamat: this.alamat
-        }),
-        this.headers
-      );
+        .then(res => (this.img = res.data.data.display_url))
+        .catch(err => console.log(err));
     }
   }
 };
